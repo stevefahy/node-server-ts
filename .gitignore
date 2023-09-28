@@ -1,0 +1,17 @@
+# ignore all logs
+*.log
+# Build folder
+dist
+# Dependency directories
+node_modules
+# dotenv environment variable files
+.env
+#.env.development
+.env.development.local
+.env.test
+.env.test.local
+#.env.production
+.env.production.local
+.env.local
+
+#notes.md
