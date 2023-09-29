@@ -17,6 +17,37 @@ npm run start
 
 The Server runs on port 5000. Open [http://localhost:5000](http://localhost:5000) with your browser to see the result. The server should respond with {"status":"success"}.
 
+The server requires two .env configuration files:
+
+.env.development
+```ts
+MONGODB_USERNAME = <mongodb username>
+MONGODB_PASSWORD = <mongodb password>
+MONGODB_URL = "127.0.0.1:27017"
+MONGODB_DB_NAME = "notes-react-dev"
+JWT_SECRET = <jwt secret>
+REFRESH_TOKEN_SECRET = <refresh token secret>
+EXPRESS_SESSION_SECRET = <express session secret>
+SESSION_EXPIRY = 60 * 15 * 1000
+REFRESH_TOKEN_EXPIRY = 60 * 60 * 24 * 1000
+COOKIE_SECRET = <cookie secret>
+WHITELISTED_DOMAINS = http://localhost:3000,http://localhost:3004,http://localhost:5000/,https://notes-react.snipbee.com,https://notes-angular.snipbee.com,https://notes-vue.snipbee.com
+```
+.env.production
+```ts
+MONGODB_USERNAME = <mongodb username>
+MONGODB_PASSWORD = <mongodb password>
+MONGODB_URL = "127.0.0.1:27017"
+MONGODB_DB_NAME = "notes-react-prod"
+JWT_SECRET = <jwt secret>
+REFRESH_TOKEN_SECRET = <refresh token secret>
+EXPRESS_SESSION_SECRET = <express session secret>
+SESSION_EXPIRY = 60 * 15 * 1000
+REFRESH_TOKEN_EXPIRY = 60 * 60 * 24 * 1000
+COOKIE_SECRET = <cookie secret>
+WHITELISTED_DOMAINS = http://localhost:3000,http://localhost:3004,http://localhost:5000/,https://notes-react.snipbee.com,https://notes-angular.snipbee.com,https://notes-vue.snipbee.com
+```
+
 ___
 ___
 ## AUTH ROUTES
@@ -149,6 +180,7 @@ Success
 }
 ```
 UserInterface[^1]
+
 
 Error
 ```ts
@@ -604,6 +636,8 @@ To create a new Note select the Notebook where that Note will be stored and then
 By default the notes are displayed as rendered Markdown. The notes can be edited by selecting the **Edit** button which will display the unrendered Markdown. Selecting the **View** button will display the rendered Markdown.
 
 To move a Note or Notes from a Folder select the **Edit Notes** button. All the Notes within that folder will become selectable. Select those Notes which you want to move and then select the **Move** button. A dialogue box will appear with a dropdown list showing all available Notebooks. Select the destination Notebook and then select the **Move Note/s** button.
+
+
 
 
 
