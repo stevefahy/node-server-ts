@@ -9,7 +9,8 @@ const AC = APPLICATION_CONSTANTS;
 export const signup = async (
   username: string,
   email: string,
-  password: string
+  password: string,
+  framework: string
 ): Promise<Signup> => {
   let user: UserInterface;
   let token: string;
@@ -33,7 +34,7 @@ export const signup = async (
   }
 
   try {
-    welcome_note = await createWelcomeNote(user._id);
+    welcome_note = await createWelcomeNote(user._id, framework);
     let notebookID;
     let noteID;
     if (welcome_note && welcome_note.success) {

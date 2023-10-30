@@ -8,16 +8,38 @@ import path from "path";
 
 const AC = APPLICATION_CONSTANTS;
 
-const dirPath = path.join(
-  __dirname,
-  "../../application_constants/welcome_markdown.md"
-);
-const WELCOME_NOTE = readFileSync(dirPath, "utf8");
+const getWelcomeNote = async (framework: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    let dirPath;
+    if (framework === "angular") {
+      dirPath = path.join(
+        __dirname,
+        "../../application_constants/welcome_markdown_angular.md"
+      );
+    } else {
+      dirPath = path.join(
+        __dirname,
+        "../../application_constants/welcome_markdown.md"
+      );
+    }
+    let welcome_note: string;
+    try {
+      welcome_note = readFileSync(dirPath, "utf8");
+      resolve(welcome_note);
+    } catch (err: unknown) {
+      reject(err);
+    }
+  });
+};
 
-export const createWelcomeNote = async (user_ID: string) => {
+let WELCOME_NOTE: string;
+
+export const createWelcomeNote = async (user_ID: string, framework: string) => {
   if (!user_ID || user_ID === undefined) {
     throw new Error(`${AC.UNAUTHORIZED_USER}`);
   }
+
+  WELCOME_NOTE = await getWelcomeNote(framework);
 
   const userID = new MObjectId(user_ID);
   const notebookID = new mongoose.Types.ObjectId();

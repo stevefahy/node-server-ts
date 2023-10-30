@@ -21,8 +21,7 @@ const router = express.Router();
 const AC = APPLICATION_CONSTANTS;
 
 router.post("/signup", async (req, res) => {
-  const { username, email, password } = req.body;
-
+  const { username, email, password, framework } = req.body;
   if (!email || email === undefined || null) {
     res.statusCode = 400;
     res.send({ error: `${AC.SIGNUP_REQUIRED_EMAIL}` });
@@ -58,7 +57,7 @@ router.post("/signup", async (req, res) => {
   }
 
   try {
-    const response = await signup(username, email, password);
+    const response = await signup(username, email, password, framework);
     if (response) {
       if (response.refreshToken) {
         res.cookie("refreshToken", response.refreshToken, COOKIE_OPTIONS);
@@ -69,7 +68,7 @@ router.post("/signup", async (req, res) => {
     }
   } catch (err: unknown) {
     const errMessage = errString(err, AC.SIGNUP_GENERAL);
-    res.statusCode = 401;
+    res.statusCode = 400;
     res.send({ error: `${errMessage}` });
     return;
   }
