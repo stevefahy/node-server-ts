@@ -24,28 +24,28 @@ The server requires two .env configuration files:
 MONGODB_USERNAME = <mongodb username>
 MONGODB_PASSWORD = <mongodb password>
 MONGODB_URL = "127.0.0.1:27017"
-MONGODB_DB_NAME = "notes-react-dev"
+MONGODB_DB_NAME = <mongodb name>
 JWT_SECRET = <jwt secret>
 REFRESH_TOKEN_SECRET = <refresh token secret>
 EXPRESS_SESSION_SECRET = <express session secret>
 SESSION_EXPIRY = 60 * 15 * 1000
 REFRESH_TOKEN_EXPIRY = 60 * 60 * 24 * 1000
 COOKIE_SECRET = <cookie secret>
-WHITELISTED_DOMAINS = http://localhost:3000,http://localhost:3004,http://localhost:5000/,https://notes-react.snipbee.com,https://notes-angular.snipbee.com,https://notes-vue.snipbee.com
+WHITELISTED_DOMAINS = http://localhost:5173,http://localhost:3000,http://localhost:3003/,http://localhost:3004,http://localhost:4200,http://localhost:5000/,http://127.0.0.1:3000,http://127.0.0.1:3003,http://127.0.0.1:3004,http://127.0.0.1:5000/,https://notes-nextjs.snipbee.com/,https://notes-react.snipbee.com,https://notes-angular.snipbee.com,https://notes-vue.snipbee.com
 ```
 .env.production
 ```ts
 MONGODB_USERNAME = <mongodb username>
 MONGODB_PASSWORD = <mongodb password>
 MONGODB_URL = "127.0.0.1:27017"
-MONGODB_DB_NAME = "notes-react-prod"
+MONGODB_DB_NAME = <mongodb name>
 JWT_SECRET = <jwt secret>
 REFRESH_TOKEN_SECRET = <refresh token secret>
 EXPRESS_SESSION_SECRET = <express session secret>
 SESSION_EXPIRY = 60 * 15 * 1000
 REFRESH_TOKEN_EXPIRY = 60 * 60 * 24 * 1000
 COOKIE_SECRET = <cookie secret>
-WHITELISTED_DOMAINS = http://localhost:3000,http://localhost:3004,http://localhost:5000/,https://notes-react.snipbee.com,https://notes-angular.snipbee.com,https://notes-vue.snipbee.com
+WHITELISTED_DOMAINS = http://localhost:5173,http://localhost:3000,http://localhost:3003/,http://localhost:3004,http://localhost:4200,http://localhost:5000/,http://127.0.0.1:3000,http://127.0.0.1:3003,http://127.0.0.1:3004,http://127.0.0.1:5000/,https://notes-nextjs.snipbee.com/,https://notes-react.snipbee.com,https://notes-angular.snipbee.com,https://notes-vue.snipbee.com
 ```
 
 ___
