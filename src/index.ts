@@ -9,9 +9,15 @@ import expressSession from "express-session";
 import { initDB } from "./util/initdb";
 
 if (process.env.NODE_ENV === "development") {
-  dotenv.config({ path: path.join(__dirname, ".env.development") });
+  dotenv.config({
+    path: path.join(__dirname, ".env.development"),
+    override: true,
+  });
 } else {
-  dotenv.config({ path: path.join(__dirname, ".env.production") });
+  dotenv.config({
+    path: path.join(__dirname, ".env.production"),
+    override: true,
+  });
 }
 
 const DB_CONNECTION = initDB();
