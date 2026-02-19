@@ -11,15 +11,15 @@ const AC = APPLICATION_CONSTANTS;
 const getWelcomeNote = async (framework: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     let dirPath;
-    if (framework === "angular") {
+    if (framework === "react") {
       dirPath = path.join(
         __dirname,
-        "../../application_constants/welcome_markdown_angular.md"
+        "../../application_constants/welcome_markdown.md"
       );
     } else {
       dirPath = path.join(
         __dirname,
-        "../../application_constants/welcome_markdown.md"
+        "../../application_constants/welcome_markdown_angular.md"
       );
     }
     let welcome_note: string;
