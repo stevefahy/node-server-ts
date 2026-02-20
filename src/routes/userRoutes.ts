@@ -16,6 +16,12 @@ import {
 } from "../authenticate";
 import { signup } from "../route_helpers/user/signup";
 
+function getRefreshTokenCookieName(req: express.Request): string {
+  const origin = req.headers.origin || '';
+  const match = origin.match(/https:\/\/([^.]+)\.snipbee\.com/);
+  return match ? `refreshToken_${match[1]}` : 'refreshToken';
+}
+
 const router = express.Router();
 
 const AC = APPLICATION_CONSTANTS;
@@ -60,7 +66,7 @@ router.post("/signup", async (req, res) => {
     const response = await signup(username, email, password, framework);
     if (response) {
       if (response.refreshToken) {
-        res.cookie("refreshToken", response.refreshToken, COOKIE_OPTIONS);
+        res.cookie(getRefreshTokenCookieName(req), response.refreshToken, COOKIE_OPTIONS);
         delete response.refreshToken;
       }
       res.send(response);
@@ -117,7 +123,7 @@ router.post("/login", (req, res, next) => {
           user.refreshToken.push({ refreshToken });
           try {
             user.save();
-            res.cookie("refreshToken", refreshToken, COOKIE_OPTIONS);
+            res.cookie(getRefreshTokenCookieName(req), refreshToken, COOKIE_OPTIONS);
             res.send({ success: true, token, details: user });
           } catch (err) {
             res.statusCode = 500;
@@ -138,7 +144,7 @@ router.post("/login", (req, res, next) => {
 
 router.get("/logout", verifyUser, async (req, res) => {
   const { signedCookies = {} } = req;
-  const { refreshToken } = signedCookies;
+  const refreshToken = signedCookies[getRefreshTokenCookieName(req)];
 
   if (!req.user) {
     res.statusCode = 401;
@@ -154,7 +160,7 @@ router.get("/logout", verifyUser, async (req, res) => {
   try {
     const response = await logout(refreshToken);
     if (response) {
-      res.clearCookie("refreshToken", COOKIE_OPTIONS);
+      res.clearCookie(getRefreshTokenCookieName(req), COOKIE_OPTIONS);
       res.send(response);
       return;
     }
@@ -168,12 +174,12 @@ router.get("/logout", verifyUser, async (req, res) => {
 
 router.get("/refreshtoken", async (req, res) => {
   const { signedCookies = {} } = req;
-  const { refreshToken } = signedCookies;
+  const refreshToken = signedCookies[getRefreshTokenCookieName(req)];
 
   try {
     const response = await refreshTheToken(refreshToken);
     if (response) {
-      res.cookie("refreshToken", response.newRefreshToken, COOKIE_OPTIONS);
+      res.cookie(getRefreshTokenCookieName(req), response.newRefreshToken, COOKIE_OPTIONS);
       //Remove refreshToken from the response
       delete response.newRefreshToken;
       res.send(response);
@@ -189,7 +195,7 @@ router.get("/refreshtoken", async (req, res) => {
 
 router.post("/change-username", verifyUser, async (req, res) => {
   const { signedCookies = {} } = req;
-  const { refreshToken } = signedCookies;
+  const refreshToken = signedCookies[getRefreshTokenCookieName(req)];
   const { newUsername } = req.body;
 
   if (!req.user) {
@@ -219,7 +225,7 @@ router.post("/change-username", verifyUser, async (req, res) => {
 
 router.patch("/change-password", verifyUser, async (req, res) => {
   const { signedCookies = {} } = req;
-  const { refreshToken } = signedCookies;
+  const refreshToken = signedCookies[getRefreshTokenCookieName(req)];
   const { oldPassword, newPassword } = req.body;
 
   if (!req.user) {
