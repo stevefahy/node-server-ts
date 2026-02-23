@@ -15,3 +15,5 @@ node_modules
 .env.local
 # Notes
 notes.md
+# Cursor
+.cursor
