@@ -32,6 +32,9 @@ import { noteRouter } from "./routes/noteRoutes";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy for correct Host/X-Forwarded-* when behind NGINX
+app.set("trust proxy", 1);
+
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE");

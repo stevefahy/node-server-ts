@@ -18,7 +18,11 @@ import { signup } from "../route_helpers/user/signup";
 
 function getRefreshTokenCookieName(req: express.Request): string {
   const origin = req.headers.origin || '';
-  const match = origin.match(/https:\/\/([^.]+)\.snipbee\.com/);
+  let match = origin.match(/https:\/\/([^.]+)\.snipbee\.com/);
+  if (!match) {
+    const host = req.headers.host || '';
+    match = host.match(/^([^.]+)\.snipbee\.com/);
+  }
   return match ? `refreshToken_${match[1]}` : 'refreshToken';
 }
 
@@ -176,19 +180,26 @@ router.get("/refreshtoken", async (req, res) => {
   const { signedCookies = {} } = req;
   const refreshToken = signedCookies[getRefreshTokenCookieName(req)];
 
+  if (!refreshToken) {
+    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
+    return;
+  }
+
   try {
     const response = await refreshTheToken(refreshToken);
+    if (response?.error) {
+      res.status(401).send(response);
+      return;
+    }
     if (response) {
       res.cookie(getRefreshTokenCookieName(req), response.newRefreshToken, COOKIE_OPTIONS);
-      //Remove refreshToken from the response
       delete response.newRefreshToken;
       res.send(response);
       return;
     }
   } catch (err: unknown) {
     const errMessage = errString(err, AC.UNAUTHORIZED_USER);
-    res.statusCode = 401;
-    res.send({ error: `${errMessage}` });
+    res.status(401).send({ error: `${errMessage}` });
     return;
   }
 });
