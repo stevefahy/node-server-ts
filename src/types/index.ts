@@ -131,6 +131,7 @@ export interface Notebook {
   notebook_cover: string;
   createdAt: ISODateString;
   updatedAt: ISODateString;
+  noteCount?: number;
 }
 
 export interface NotebookDateUpdated extends UpdateResult {

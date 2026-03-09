@@ -51,6 +51,18 @@ export const getNotebooks = async (user_ID: string) => {
   try {
     const result = (await findNotebooks(userID)) as Notebooks | null;
     if (result && result.notebooks) {
+      const noteCounts = await db_connection.db
+        .collection("notes")
+        .aggregate([
+          { $match: { user: userID } },
+          { $group: { _id: "$notebook", count: { $sum: 1 } } },
+        ])
+        .toArray();
+
+      const countMap = new Map(
+        noteCounts.map((c) => [c._id.toString(), c.count]),
+      );
+
       result.notebooks = result.notebooks.map((item: Notebook) => {
         item._id = item._id.toString();
         let createddate = "No date";
@@ -67,6 +79,7 @@ export const getNotebooks = async (user_ID: string) => {
           notebook_cover: item.notebook_cover,
           createdAt: createddate,
           updatedAt: updateddate,
+          noteCount: countMap.get(item._id) ?? 0,
         };
       });
     } else {
