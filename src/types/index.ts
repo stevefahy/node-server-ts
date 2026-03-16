@@ -8,7 +8,7 @@ export interface PassportLocalDocument extends Document {
   setPassword(password: string): Promise<PassportLocalDocument>;
   changePassword(
     oldPassword: string,
-    newPassword: string
+    newPassword: string,
   ): Promise<PassportLocalDocument>;
 }
 
@@ -37,7 +37,7 @@ export interface UserInterface extends Document {
   refreshToken: RefreshTokenInterface[];
   changePassword(
     oldPassword: string,
-    newPassword: string
+    newPassword: string,
   ): Promise<PassportLocalDocument>;
 }
 
