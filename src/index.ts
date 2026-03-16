@@ -8,6 +8,52 @@ import path from "path";
 import expressSession from "express-session";
 import { initDB } from "./util/initdb";
 
+// Prevent crash when MongoDB is stopped/unreachable during error testing.
+// 1. uncaughtException: MongoDB driver can throw from internal setTimeout (not reject).
+// 2. unhandledRejection: Node 15+ exits on unhandled promise rejections; catch Mongo errors.
+const isMongoConnectionError = (err: unknown): boolean => {
+  if (err instanceof Error) {
+    const name = err.name;
+    const msg = err.message || "";
+    return (
+      name === "MongoServerSelectionError" ||
+      name === "MongoNetworkError" ||
+      name === "MongoError" ||
+      /ECONNREFUSED|connection.*refused|connect.*refused/i.test(msg)
+    );
+  }
+  if (typeof err === "object" && err !== null && "message" in err) {
+    return /ECONNREFUSED|connection.*refused|MongoServerSelection|MongoNetwork/i.test(
+      String((err as { message?: unknown }).message),
+    );
+  }
+  return false;
+};
+
+process.on("uncaughtException", (err: Error) => {
+  if (isMongoConnectionError(err)) {
+    console.error(
+      "MongoDB connection failed (server unreachable):",
+      err.message,
+    );
+    return;
+  }
+  console.error("Uncaught exception:", err);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason: unknown) => {
+  if (isMongoConnectionError(reason)) {
+    console.error("MongoDB connection failed (unhandled rejection):", reason);
+    return;
+  }
+  console.error("Unhandled rejection:", reason);
+  // In development, log and continue; in production you may want process.exit(1)
+  if (process.env.NODE_ENV === "production") {
+    process.exit(1);
+  }
+});
+
 if (process.env.NODE_ENV === "development") {
   dotenv.config({
     path: path.join(__dirname, ".env.development"),
@@ -51,7 +97,7 @@ app.use(
     resave: true,
     saveUninitialized: true,
     cookie: { secure: true },
-  })
+  }),
 );
 
 //Add the client URL to the CORS policy
@@ -88,6 +134,6 @@ app.get("/", async function (req, res) {
 
 app.listen(PORT, () => {
   console.log(
-    `New Server is running on port:${PORT}. DB ${process.env.MONGODB_DB_NAME}. DB Connection status: ${DB_CONNECTION}`
+    `New Server is running on port:${PORT}. DB ${process.env.MONGODB_DB_NAME}. DB Connection status: ${DB_CONNECTION}`,
   );
 });

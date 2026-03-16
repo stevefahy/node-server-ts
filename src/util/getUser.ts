@@ -1,6 +1,5 @@
 import APPLICATION_CONSTANTS from "../application_constants/applicationConstants";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { errString } from "./errorString";
 import { UserInterface } from "../types";
 import User from "../models/user";
 
@@ -11,11 +10,11 @@ export const getUser = async (refreshToken: string) => {
   try {
     payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
     if (typeof payload === "string") {
-      throw new Error(`${AC.UNAUTHORIZED}`);
+      throw new Error(AC.UNAUTHORIZED);
     }
   } catch (err: unknown) {
-    const errMessage = errString(err, AC.UNAUTHORIZED_JWT);
-    throw new Error(`${errMessage}`);
+    console.error("getUser jwt verify error:", err);
+    throw new Error(AC.UNAUTHORIZED_JWT);
   }
 
   const userId = payload._id;
@@ -24,11 +23,11 @@ export const getUser = async (refreshToken: string) => {
   try {
     user = await User.findOne({ _id: userId });
     if (user === null) {
-      throw new Error(`${AC.UNAUTHORIZED_USER}`);
+      throw new Error(AC.UNAUTHORIZED_USER);
     }
     return user;
   } catch (err: unknown) {
-    const errMessage = errString(err, AC.UNAUTHORIZED_USER);
-    throw new Error(`${errMessage}`);
+    console.error("getUser findOne error:", err);
+    throw new Error(AC.GENERAL_ERROR);
   }
 };

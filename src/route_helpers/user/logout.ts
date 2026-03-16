@@ -1,5 +1,4 @@
 import APPLICATION_CONSTANTS from "../../application_constants/applicationConstants";
-import { errString } from "../../util/errorString";
 import { Logout, UserInterface } from "../../types";
 import { getUser } from "../../util/getUser";
 
@@ -10,8 +9,8 @@ export const logout = async (refreshToken: string): Promise<Logout> => {
   try {
     user = await getUser(refreshToken);
   } catch (err: unknown) {
-    const errMessage = errString(err);
-    return { error: `${errMessage}` };
+    console.error("logout getUser error:", err);
+    return { error: AC.LOGOUT_ERROR };
   }
 
   try {
@@ -19,20 +18,20 @@ export const logout = async (refreshToken: string): Promise<Logout> => {
       (item) => item.refreshToken === refreshToken
     );
     if (tokenIndex === -1) {
-      return { error: `${AC.UNAUTHORIZED_TOKEN}` };
+      return { error: AC.UNAUTHORIZED_TOKEN };
     } else {
       user.refreshToken.splice(tokenIndex, 1);
     }
   } catch (err: unknown) {
-    const errMessage = errString(err, AC.LOGOUT_ERROR);
-    return { error: `${errMessage}` };
+    console.error("logout tokenIndex error:", err);
+    return { error: AC.LOGOUT_ERROR };
   }
 
   try {
     await user.save();
     return { success: true };
   } catch (err) {
-    const errMessage = errString(err, AC.LOGOUT_ERROR);
-    return { error: `${errMessage}` };
+    console.error("logout save error:", err);
+    return { error: AC.LOGOUT_ERROR };
   }
 };

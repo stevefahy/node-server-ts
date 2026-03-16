@@ -3,7 +3,6 @@ import User from "../models/user";
 import passport from "passport";
 import { UserInterface } from "../types";
 import { changeUsername } from "../route_helpers/user/change-username";
-import { errString } from "../util/errorString";
 import { changePassword } from "../route_helpers/user/change-password";
 import { refreshTheToken } from "../route_helpers/user/refresh-token";
 import { logout } from "../route_helpers/user/logout";
@@ -17,13 +16,13 @@ import {
 import { signup } from "../route_helpers/user/signup";
 
 function getRefreshTokenCookieName(req: express.Request): string {
-  const origin = req.headers.origin || '';
+  const origin = req.headers.origin || "";
   let match = origin.match(/https:\/\/([^.]+)\.snipbee\.com/);
   if (!match) {
-    const host = req.headers.host || '';
+    const host = req.headers.host || "";
     match = host.match(/^([^.]+)\.snipbee\.com/);
   }
-  return match ? `refreshToken_${match[1]}` : 'refreshToken';
+  return match ? `refreshToken_${match[1]}` : "refreshToken";
 }
 
 const router = express.Router();
@@ -70,16 +69,20 @@ router.post("/signup", async (req, res) => {
     const response = await signup(username, email, password, framework);
     if (response) {
       if (response.refreshToken) {
-        res.cookie(getRefreshTokenCookieName(req), response.refreshToken, COOKIE_OPTIONS);
+        res.cookie(
+          getRefreshTokenCookieName(req),
+          response.refreshToken,
+          COOKIE_OPTIONS,
+        );
         delete response.refreshToken;
       }
       res.send(response);
       return;
     }
   } catch (err: unknown) {
-    const errMessage = errString(err, AC.SIGNUP_GENERAL);
+    console.error("signup error:", err);
     res.statusCode = 400;
-    res.send({ error: `${errMessage}` });
+    res.send({ error: AC.SIGNUP_GENERAL });
     return;
   }
 });
@@ -127,7 +130,11 @@ router.post("/login", (req, res, next) => {
           user.refreshToken.push({ refreshToken });
           try {
             user.save();
-            res.cookie(getRefreshTokenCookieName(req), refreshToken, COOKIE_OPTIONS);
+            res.cookie(
+              getRefreshTokenCookieName(req),
+              refreshToken,
+              COOKIE_OPTIONS,
+            );
             res.send({ success: true, token, details: user });
           } catch (err) {
             res.statusCode = 500;
@@ -136,7 +143,7 @@ router.post("/login", (req, res, next) => {
         },
         (err) => {
           next({ error: err });
-        }
+        },
       );
     } catch (error) {
       res.statusCode = 401;
@@ -169,9 +176,9 @@ router.get("/logout", verifyUser, async (req, res) => {
       return;
     }
   } catch (error: unknown) {
-    const errMessage = errString(error, AC.LOGOUT_ERROR);
+    console.error("logout error:", error);
     res.statusCode = 401;
-    res.send({ error: `${errMessage}` });
+    res.send({ error: AC.LOGOUT_ERROR });
     return;
   }
 });
@@ -192,14 +199,18 @@ router.get("/refreshtoken", async (req, res) => {
       return;
     }
     if (response) {
-      res.cookie(getRefreshTokenCookieName(req), response.newRefreshToken, COOKIE_OPTIONS);
+      res.cookie(
+        getRefreshTokenCookieName(req),
+        response.newRefreshToken,
+        COOKIE_OPTIONS,
+      );
       delete response.newRefreshToken;
       res.send(response);
       return;
     }
   } catch (err: unknown) {
-    const errMessage = errString(err, AC.UNAUTHORIZED_USER);
-    res.status(401).send({ error: `${errMessage}` });
+    console.error("refreshtoken error:", err);
+    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
     return;
   }
 });
@@ -227,9 +238,9 @@ router.post("/change-username", verifyUser, async (req, res) => {
       return;
     }
   } catch (error: unknown) {
-    const errMessage = errString(error, AC.CHANGE_USER_ERROR);
+    console.error("change-username error:", error);
     res.statusCode = 401;
-    res.send({ error: `${errMessage}` });
+    res.send({ error: AC.CHANGE_USER_ERROR });
     return;
   }
 });
@@ -254,16 +265,16 @@ router.patch("/change-password", verifyUser, async (req, res) => {
     const response = await changePassword(
       oldPassword,
       newPassword,
-      refreshToken
+      refreshToken,
     );
     if (response) {
       res.send(response);
       return;
     }
   } catch (error: unknown) {
-    const errMessage = errString(error, AC.CHANGE_PASS_ERROR);
+    console.error("change-password error:", error);
     res.statusCode = 401;
-    res.send({ error: `${errMessage}` });
+    res.send({ error: AC.CHANGE_PASS_ERROR });
     return;
   }
 });

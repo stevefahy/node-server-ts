@@ -1,5 +1,4 @@
 import APPLICATION_CONSTANTS from "../../application_constants/applicationConstants";
-import { errString } from "../../util/errorString";
 import { RefreshToken, UserInterface } from "../../types";
 import { getUser } from "../../util/getUser";
 import { getToken, getRefreshToken } from "../../authenticate";
@@ -13,8 +12,8 @@ export const refreshTheToken = async (
   try {
     user = await getUser(refreshToken);
   } catch (err: unknown) {
-    const errMessage = errString(err);
-    return { error: `${errMessage}` };
+    console.error("refreshTheToken getUser error:", err);
+    return { error: AC.UNAUTHORIZED_USER };
   }
 
   const userId = user._id;
@@ -26,7 +25,7 @@ export const refreshTheToken = async (
       (item) => item.refreshToken === refreshToken
     );
     if (tokenIndex === -1) {
-      return { error: `${AC.UNAUTHORIZED_TOKEN}` };
+      return { error: AC.UNAUTHORIZED_TOKEN };
     } else {
       token = getToken({ _id: userId });
       // If the refresh token exists, then create new one and replace it.
@@ -36,15 +35,15 @@ export const refreshTheToken = async (
       };
     }
   } catch (err: unknown) {
-    const errMessage = errString(err);
-    return { error: `${errMessage}` };
+    console.error("refreshTheToken tokenIndex error:", err);
+    return { error: AC.GENERAL_ERROR };
   }
 
   try {
     await user.save();
     return { success: true, token, details: user, newRefreshToken };
   } catch (err) {
-    const errMessage = errString(err);
-    return { error: `${errMessage}` };
+    console.error("refreshTheToken save error:", err);
+    return { error: AC.GENERAL_ERROR };
   }
 };

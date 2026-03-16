@@ -14,7 +14,6 @@ import { editNotebookDate } from "../route_helpers/notebook/edit-notebook-date";
 import { deleteNotebook } from "../route_helpers/notebook/delete-notebook";
 import { editNotebook } from "../route_helpers/notebook/edit-notebook";
 import APPLICATION_CONSTANTS from "../application_constants/applicationConstants";
-import { errString } from "../util/errorString";
 
 const AC = APPLICATION_CONSTANTS;
 
@@ -39,12 +38,12 @@ router.get(
         return;
       }
     } catch (err: unknown) {
-      const errMessage = errString(err);
+      console.error("getNotebooks error:", err);
       res.statusCode = 400;
-      res.send({ error: `${AC.NOTEBOOKS_ERROR}\n${errMessage}` });
+      res.send({ error: AC.NOTEBOOKS_ERROR });
       return;
     }
-  }
+  },
 );
 
 router.get("/notebook/:notebookId", verifyUser, async function (req, res) {
@@ -66,9 +65,9 @@ router.get("/notebook/:notebookId", verifyUser, async function (req, res) {
       return;
     }
   } catch (err: unknown) {
-    const errMessage = errString(err);
+    console.error("getNotebook error:", err);
     res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_ERROR}\n${errMessage}` });
+    res.send({ error: AC.NOTEBOOK_ERROR });
     return;
   }
 });
@@ -91,9 +90,9 @@ router.get("/notes/:notebookId", verifyUser, async function (req, res) {
       return;
     }
   } catch (err: unknown) {
-    const errMessage = errString(err);
+    console.error("getNotes error:", err);
     res.statusCode = 400;
-    res.send({ error: `${AC.NOTES_FETCH_ERROR}\n${errMessage}` });
+    res.send({ error: AC.NOTES_FETCH_ERROR });
     return;
   }
 });
@@ -129,12 +128,12 @@ router.get(
         return;
       }
     } catch (err: unknown) {
-      const errMessage = errString(err);
+      console.error("getNote error:", err);
       res.statusCode = 400;
-      res.send({ error: `${AC.NOTES_FETCH_ERROR}\n${errMessage}` });
+      res.send({ error: AC.NOTES_FETCH_ERROR });
       return;
     }
-  }
+  },
 );
 
 router.post("/create-note", verifyUser, async function (req, res) {
@@ -164,9 +163,9 @@ router.post("/create-note", verifyUser, async function (req, res) {
       return;
     }
   } catch (err: unknown) {
-    const errMessage = errString(err);
+    console.error("createNote error:", err);
     res.statusCode = 400;
-    res.send({ error: `${AC.CREATE_NOTE_ERROR}\n${errMessage}` });
+    res.send({ error: AC.CREATE_NOTE_ERROR });
     return;
   }
 });
@@ -195,16 +194,16 @@ router.post("/addnotebook", verifyUser, async function (req, res) {
     const response = await addNotebook(
       req.user._id,
       notebookName,
-      notebookCover
+      notebookCover,
     );
     if (response) {
       res.send(response);
       return;
     }
   } catch (err: unknown) {
-    const errMessage = errString(err);
+    console.error("addNotebook error:", err);
     res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_CREATE_ERROR}\n${errMessage}` });
+    res.send({ error: AC.NOTEBOOK_CREATE_ERROR });
     return;
   }
 });
@@ -231,9 +230,9 @@ router.post("/delete-notes", verifyUser, async function (req, res) {
       return;
     }
   } catch (err: unknown) {
-    const errMessage = errString(err);
+    console.error("deleteNotes error:", err);
     res.statusCode = 400;
-    res.send({ error: `${AC.NOTES_DELETE_ERROR}\n${errMessage}` });
+    res.send({ error: AC.NOTES_DELETE_ERROR });
     return;
   }
 });
@@ -264,16 +263,16 @@ router.post("/edit-notebook-date", verifyUser, async function (req, res) {
     const response = await editNotebookDate(
       req.user._id,
       notebookID,
-      notebookUpdated
+      notebookUpdated,
     );
     if (response) {
       res.send(response);
       return;
     }
   } catch (err: unknown) {
-    const errMessage = errString(err);
+    console.error("editNotebookDate error:", err);
     res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_UPDATED_DATE_ERROR}\n${errMessage}` });
+    res.send({ error: AC.NOTEBOOK_UPDATED_DATE_ERROR });
     return;
   }
 });
@@ -308,16 +307,16 @@ router.post("/move-notes", verifyUser, async function (req, res) {
       req.user._id,
       notes,
       notebookID,
-      latestUpdatedNote
+      latestUpdatedNote,
     );
     if (response) {
       res.send(response);
       return;
     }
   } catch (err: unknown) {
-    const errMessage = errString(err);
+    console.error("moveNotes error:", err);
     res.statusCode = 400;
-    res.send({ error: `${AC.NOTES_MOVE_ERROR}\n${errMessage}` });
+    res.send({ error: AC.NOTES_MOVE_ERROR });
     return;
   }
 });
@@ -344,9 +343,9 @@ router.post("/delete-notebook", verifyUser, async function (req, res) {
       return;
     }
   } catch (err: unknown) {
-    const errMessage = errString(err);
+    console.error("deleteNotebook error:", err);
     res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_DELETE_ERROR}\n${errMessage}` });
+    res.send({ error: AC.NOTEBOOK_DELETE_ERROR });
     return;
   }
 });
@@ -387,16 +386,16 @@ router.post("/edit-notebook", verifyUser, async function (req, res) {
       notebookID,
       notebookName,
       notebookCover,
-      notebookUpdated
+      notebookUpdated,
     );
     if (response) {
       res.send(response);
       return;
     }
   } catch (err: unknown) {
-    const errMessage = errString(err);
+    console.error("editNotebook error:", err);
     res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_EDIT_ERROR}\n${errMessage}` });
+    res.send({ error: AC.NOTEBOOK_EDIT_ERROR });
     return;
   }
 });
@@ -433,9 +432,9 @@ router.post("/save-note", verifyUser, async function (req, res) {
       return;
     }
   } catch (err: unknown) {
-    const errMessage = errString(err);
+    console.error("saveNote error:", err);
     res.statusCode = 400;
-    res.send({ error: `${AC.NOTE_SAVE_ERROR}\n${errMessage}` });
+    res.send({ error: AC.NOTE_SAVE_ERROR });
     return;
   }
 });
