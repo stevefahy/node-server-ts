@@ -27,6 +27,10 @@ export const getUser = async (refreshToken: string) => {
     }
     return user;
   } catch (err: unknown) {
+    // Re-throw intentional auth errors (user not found)
+    if (err instanceof Error && err.message === AC.UNAUTHORIZED_USER) {
+      throw err;
+    }
     console.error("getUser findOne error:", err);
     throw new Error(AC.GENERAL_ERROR);
   }

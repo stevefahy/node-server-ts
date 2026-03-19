@@ -26,8 +26,7 @@ router.get(
   verifyUser,
   async function (req: Request, res: Response) {
     if (!req.user) {
-      res.statusCode = 401;
-      res.send({ error: `${AC.NOTEBOOKS_ERROR} ${AC.UNAUTHORIZED_USER}` });
+      res.status(401).send({ error: AC.UNAUTHORIZED_USER });
       return;
     }
 
@@ -39,8 +38,7 @@ router.get(
       }
     } catch (err: unknown) {
       console.error("getNotebooks error:", err);
-      res.statusCode = 400;
-      res.send({ error: AC.NOTEBOOKS_ERROR });
+      res.status(400).send({ error: AC.NOTEBOOKS_ERROR });
       return;
     }
   },
@@ -48,13 +46,11 @@ router.get(
 
 router.get("/notebook/:notebookId", verifyUser, async function (req, res) {
   if (!req.user) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.NOTEBOOK_ERROR} ${AC.UNAUTHORIZED_USER}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
     return;
   }
   if (!req.params.notebookId) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_ID_ERROR}` });
+    res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
   }
 
@@ -66,21 +62,18 @@ router.get("/notebook/:notebookId", verifyUser, async function (req, res) {
     }
   } catch (err: unknown) {
     console.error("getNotebook error:", err);
-    res.statusCode = 400;
-    res.send({ error: AC.NOTEBOOK_ERROR });
+    res.status(400).send({ error: AC.NOTEBOOK_ERROR });
     return;
   }
 });
 
 router.get("/notes/:notebookId", verifyUser, async function (req, res) {
   if (!req.user) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.NOTES_FETCH_ERROR} ${AC.UNAUTHORIZED_USER}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
     return;
   }
   if (!req.params.notebookId) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_ID_ERROR}` });
+    res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
   }
   try {
@@ -91,8 +84,7 @@ router.get("/notes/:notebookId", verifyUser, async function (req, res) {
     }
   } catch (err: unknown) {
     console.error("getNotes error:", err);
-    res.statusCode = 400;
-    res.send({ error: AC.NOTES_FETCH_ERROR });
+    res.status(400).send({ error: AC.NOTES_FETCH_ERROR });
     return;
   }
 });
@@ -102,22 +94,20 @@ router.get(
   verifyUser,
   async function (req, res) {
     if (!req.user) {
-      res.statusCode = 401;
-      res.send({ error: `${AC.NOTES_FETCH_ERROR} ${AC.UNAUTHORIZED_USER}` });
+      res.status(401).send({ error: AC.UNAUTHORIZED_USER });
       return;
     }
     if (!req.params.notebookId) {
-      res.statusCode = 400;
-      res.send({ error: `${AC.NOTEBOOK_ID_ERROR}` });
+      res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
       return;
     }
     if (!req.params.noteId) {
-      res.statusCode = 400;
-      res.send({ error: `${AC.NOTE_ID_ERROR}` });
+      res.status(400).send({ error: AC.NOTE_ID_ERROR });
       return;
     }
 
     if (req.params.noteId === "create-note") {
+      res.status(200).send({ createMode: true });
       return;
     }
 
@@ -129,8 +119,7 @@ router.get(
       }
     } catch (err: unknown) {
       console.error("getNote error:", err);
-      res.statusCode = 400;
-      res.send({ error: AC.NOTES_FETCH_ERROR });
+      res.status(400).send({ error: AC.NOTE_ERROR });
       return;
     }
   },
@@ -141,18 +130,15 @@ router.post("/create-note", verifyUser, async function (req, res) {
   const { notebookId, note } = data;
 
   if (!req.user) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.CREATE_NOTE_ERROR}\n${AC.UNAUTHORIZED_USER}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
     return;
   }
   if (!notebookId) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_ID_ERROR}` });
+    res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
   }
   if (!note) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.NOTE_EMPTY}` });
+    res.status(400).send({ error: AC.NOTE_EMPTY });
     return;
   }
 
@@ -164,8 +150,7 @@ router.post("/create-note", verifyUser, async function (req, res) {
     }
   } catch (err: unknown) {
     console.error("createNote error:", err);
-    res.statusCode = 400;
-    res.send({ error: AC.CREATE_NOTE_ERROR });
+    res.status(400).send({ error: AC.CREATE_NOTE_ERROR });
     return;
   }
 });
@@ -175,18 +160,15 @@ router.post("/addnotebook", verifyUser, async function (req, res) {
   const { notebookName, notebookCover } = data;
 
   if (!req.user) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.NOTEBOOK_CREATE_ERROR}\n${AC.UNAUTHORIZED_USER}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
     return;
   }
-  if (!notebookName || notebookName === null) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_NAME_ERROR}` });
+  if (!notebookName) {
+    res.status(400).send({ error: AC.NOTEBOOK_NAME_ERROR });
     return;
   }
-  if (!notebookCover || notebookCover === null) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.NOTEBOOK_COVER_ERROR}` });
+  if (!notebookCover) {
+    res.status(400).send({ error: AC.NOTEBOOK_COVER_ERROR });
     return;
   }
 
@@ -202,8 +184,7 @@ router.post("/addnotebook", verifyUser, async function (req, res) {
     }
   } catch (err: unknown) {
     console.error("addNotebook error:", err);
-    res.statusCode = 400;
-    res.send({ error: AC.NOTEBOOK_CREATE_ERROR });
+    res.status(400).send({ error: AC.NOTEBOOK_CREATE_ERROR });
     return;
   }
 });
@@ -213,13 +194,11 @@ router.post("/delete-notes", verifyUser, async function (req, res) {
   const { note_ids } = data;
 
   if (!req.user) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.NOTES_DELETE_ERROR}\n${AC.UNAUTHORIZED_USER}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
     return;
   }
-  if (!note_ids || note_ids === null || note_ids.length < 1) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.NOTES_DELETE_ID_ERROR}` });
+  if (!note_ids || note_ids.length < 1) {
+    res.status(400).send({ error: AC.NOTES_DELETE_ID_ERROR });
     return;
   }
 
@@ -231,8 +210,7 @@ router.post("/delete-notes", verifyUser, async function (req, res) {
     }
   } catch (err: unknown) {
     console.error("deleteNotes error:", err);
-    res.statusCode = 400;
-    res.send({ error: AC.NOTES_DELETE_ERROR });
+    res.status(400).send({ error: AC.NOTES_DELETE_ERROR });
     return;
   }
 });
@@ -242,20 +220,15 @@ router.post("/edit-notebook-date", verifyUser, async function (req, res) {
   const { notebookID, notebookUpdated } = data;
 
   if (!req.user) {
-    res.statusCode = 401;
-    res.send({
-      error: `${AC.NOTEBOOK_UPDATED_DATE_ERROR} ${AC.UNAUTHORIZED_USER}`,
-    });
+    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
     return;
   }
-  if (!notebookID || notebookID === null) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_ID_ERROR}` });
+  if (!notebookID) {
+    res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
   }
-  if (!notebookUpdated || notebookUpdated === null) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_UPDATED_DATE_MISSING}` });
+  if (!notebookUpdated) {
+    res.status(400).send({ error: AC.NOTEBOOK_UPDATED_DATE_MISSING });
     return;
   }
 
@@ -271,8 +244,7 @@ router.post("/edit-notebook-date", verifyUser, async function (req, res) {
     }
   } catch (err: unknown) {
     console.error("editNotebookDate error:", err);
-    res.statusCode = 400;
-    res.send({ error: AC.NOTEBOOK_UPDATED_DATE_ERROR });
+    res.status(400).send({ error: AC.NOTEBOOK_UPDATED_DATE_ERROR });
     return;
   }
 });
@@ -282,23 +254,19 @@ router.post("/move-notes", verifyUser, async function (req, res) {
   const { notes, notebookID, latestUpdatedNote } = data;
 
   if (!req.user) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.NOTES_MOVE_ERROR} ${AC.UNAUTHORIZED_USER}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
     return;
   }
-  if (!notes || notes === undefined) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.NOTES_MOVE_MISSING} ${AC.UNAUTHORIZED_USER}` });
+  if (!notes) {
+    res.status(400).send({ error: AC.NOTES_MOVE_MISSING });
     return;
   }
-  if (!notebookID || notebookID === undefined) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.NOTEBOOK_ID_ERROR}` });
+  if (!notebookID) {
+    res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
   }
-  if (!latestUpdatedNote || latestUpdatedNote === undefined) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.NOTEBOOK_UPDATED_DATE_MISSING}` });
+  if (!latestUpdatedNote) {
+    res.status(400).send({ error: AC.NOTEBOOK_UPDATED_DATE_MISSING });
     return;
   }
 
@@ -315,8 +283,7 @@ router.post("/move-notes", verifyUser, async function (req, res) {
     }
   } catch (err: unknown) {
     console.error("moveNotes error:", err);
-    res.statusCode = 400;
-    res.send({ error: AC.NOTES_MOVE_ERROR });
+    res.status(400).send({ error: AC.NOTES_MOVE_ERROR });
     return;
   }
 });
@@ -326,13 +293,11 @@ router.post("/delete-notebook", verifyUser, async function (req, res) {
   const { notebookID } = data;
 
   if (!req.user) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.NOTEBOOK_DELETE_ERROR} ${AC.UNAUTHORIZED_USER}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
     return;
   }
-  if (!notebookID || notebookID === undefined) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.NOTEBOOK_ID_ERROR}` });
+  if (!notebookID) {
+    res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
   }
 
@@ -344,8 +309,7 @@ router.post("/delete-notebook", verifyUser, async function (req, res) {
     }
   } catch (err: unknown) {
     console.error("deleteNotebook error:", err);
-    res.statusCode = 400;
-    res.send({ error: AC.NOTEBOOK_DELETE_ERROR });
+    res.status(400).send({ error: AC.NOTEBOOK_DELETE_ERROR });
     return;
   }
 });
@@ -355,28 +319,23 @@ router.post("/edit-notebook", verifyUser, async function (req, res) {
   const { notebookID, notebookName, notebookCover, notebookUpdated } = data;
 
   if (!req.user) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.NOTEBOOK_EDIT_ERROR} ${AC.UNAUTHORIZED_USER}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
     return;
   }
-  if (!notebookID || notebookID === undefined) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_ID_ERROR}` });
+  if (!notebookID) {
+    res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
   }
-  if (!notebookName || notebookName === undefined) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_NAME_ERROR}` });
+  if (!notebookName) {
+    res.status(400).send({ error: AC.NOTEBOOK_NAME_ERROR });
     return;
   }
-  if (!notebookCover || notebookCover === undefined) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_COVER_ERROR}` });
+  if (!notebookCover) {
+    res.status(400).send({ error: AC.NOTEBOOK_COVER_ERROR });
     return;
   }
-  if (!notebookUpdated || notebookUpdated === undefined) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_UPDATED_DATE_MISSING}` });
+  if (!notebookUpdated) {
+    res.status(400).send({ error: AC.NOTEBOOK_UPDATED_DATE_MISSING });
     return;
   }
 
@@ -394,8 +353,7 @@ router.post("/edit-notebook", verifyUser, async function (req, res) {
     }
   } catch (err: unknown) {
     console.error("editNotebook error:", err);
-    res.statusCode = 400;
-    res.send({ error: AC.NOTEBOOK_EDIT_ERROR });
+    res.status(400).send({ error: AC.NOTEBOOK_EDIT_ERROR });
     return;
   }
 });
@@ -405,23 +363,19 @@ router.post("/save-note", verifyUser, async function (req, res) {
   const { notebookID, noteID, note } = data;
 
   if (!req.user) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.NOTE_SAVE_ERROR} ${AC.UNAUTHORIZED_USER}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
     return;
   }
-  if (!notebookID || notebookID === undefined) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.NOTEBOOK_ID_ERROR}` });
+  if (!notebookID) {
+    res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
   }
-  if (!noteID || noteID === undefined) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.NOTE_ID_ERROR}` });
+  if (!noteID) {
+    res.status(400).send({ error: AC.NOTE_ID_ERROR });
     return;
   }
-  if (!note || note === undefined) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.NOTE_EMPTY}` });
+  if (!note) {
+    res.status(400).send({ error: AC.NOTE_EMPTY });
     return;
   }
 
@@ -433,8 +387,7 @@ router.post("/save-note", verifyUser, async function (req, res) {
     }
   } catch (err: unknown) {
     console.error("saveNote error:", err);
-    res.statusCode = 400;
-    res.send({ error: AC.NOTE_SAVE_ERROR });
+    res.status(400).send({ error: AC.NOTE_SAVE_ERROR });
     return;
   }
 });

@@ -6,14 +6,14 @@ const AC = APPLICATION_CONSTANTS;
 
 export const changeUsername = async (
   newUsername: string,
-  refreshToken: string
+  refreshToken: string,
 ): Promise<ChangeUsername> => {
   if (
     !newUsername ||
     newUsername === undefined ||
     typeof newUsername !== "string"
   ) {
-    return { error: AC.CHANGE_USER_UNIQUE };
+    return { error: AC.CHANGE_USER_REQUIRED };
   }
   if (newUsername.length < AC.USERNAME_MIN) {
     return { error: AC.CHANGE_USER_TOO_FEW };

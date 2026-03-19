@@ -18,7 +18,15 @@ export const signup = async (
   let welcome_note: CreateWelcomeNote;
   try {
     user = await User.register(new User({ email: email }), password);
-  } catch (err) {
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === "object" &&
+      "name" in err &&
+      (err as { name: string }).name === "UserExistsError"
+    ) {
+      throw err;
+    }
     throw new Error(`${AC.CREATE_USER_ERROR} ${err}`);
   }
 

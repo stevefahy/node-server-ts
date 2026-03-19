@@ -74,6 +74,7 @@ import "./authenticate";
 
 import { userRouter } from "./routes/userRoutes";
 import { noteRouter } from "./routes/noteRoutes";
+import APPLICATION_CONSTANTS from "./application_constants/applicationConstants";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -127,6 +128,18 @@ app.use(passport.session());
 app.use("/api/auth", userRouter);
 
 app.use("/api/data", noteRouter);
+
+app.use(
+  (
+    err: unknown,
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction,
+  ) => {
+    console.error("Unhandled error:", err);
+    res.status(500).send({ error: APPLICATION_CONSTANTS.GENERAL_ERROR });
+  },
+);
 
 app.get("/", async function (req, res) {
   res.send({ status: "success" });

@@ -12,7 +12,10 @@ export const refreshTheToken = async (
   try {
     user = await getUser(refreshToken);
   } catch (err: unknown) {
-    console.error("refreshTheToken getUser error:", err);
+    const msg = err instanceof Error ? err.message : "";
+    if (msg !== AC.UNAUTHORIZED_USER && msg !== AC.UNAUTHORIZED_JWT) {
+      console.error("refreshTheToken getUser error:", err);
+    }
     return { error: AC.UNAUTHORIZED_USER };
   }
 

@@ -31,37 +31,32 @@ const AC = APPLICATION_CONSTANTS;
 
 router.post("/signup", async (req, res) => {
   const { username, email, password, framework } = req.body;
-  if (!email || email === undefined || null) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.SIGNUP_REQUIRED_EMAIL}` });
+  if (!email) {
+    res.status(400).send({ error: AC.SIGNUP_REQUIRED_EMAIL });
     return;
-  } else if (!password || password === undefined || null) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.SIGNUP_REQUIRED_PASSWORD}` });
+  }
+  if (!password) {
+    res.status(400).send({ error: AC.SIGNUP_REQUIRED_PASSWORD });
     return;
-  } else if (!username || username === undefined || null) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.SIGNUP_REQUIRED_USERNAME}` });
+  }
+  if (!username) {
+    res.status(400).send({ error: AC.SIGNUP_REQUIRED_USERNAME });
     return;
   }
   if (username.length < AC.USERNAME_MIN) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.CHANGE_USER_TOO_FEW}` });
+    res.status(400).send({ error: AC.CHANGE_USER_TOO_FEW });
     return;
   }
   if (username.length > AC.USERNAME_MAX) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.CHANGE_USER_TOO_MANY}` });
+    res.status(400).send({ error: AC.CHANGE_USER_TOO_MANY });
     return;
   }
   if (password.length < AC.PASSWORD_MIN) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.CHANGE_PASS_TOO_FEW}` });
+    res.status(400).send({ error: AC.CHANGE_PASS_TOO_FEW });
     return;
   }
   if (password.length > AC.PASSWORD_MAX) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.CHANGE_PASS_TOO_MANY}` });
+    res.status(400).send({ error: AC.CHANGE_PASS_TOO_MANY });
     return;
   }
 
@@ -81,38 +76,41 @@ router.post("/signup", async (req, res) => {
     }
   } catch (err: unknown) {
     console.error("signup error:", err);
-    res.statusCode = 400;
-    res.send({ error: AC.SIGNUP_GENERAL });
+    const errorMessage =
+      err &&
+      typeof err === "object" &&
+      "name" in err &&
+      (err as { name: string }).name === "UserExistsError"
+        ? AC.SIGNUP_EMAIL_REGISTERED
+        : AC.SIGNUP_GENERAL;
+    res.status(400).send({ error: errorMessage });
     return;
   }
 });
 
-router.post("/login", (req, res, next) => {
+router.post("/login", (req, res) => {
   const { email, password } = req.body;
 
   if (!email || email.length < AC.EMAIL_MIN) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.SIGNUP_INVALID_EMAIL}` });
+    res.status(400).send({ error: AC.SIGNUP_INVALID_EMAIL });
     return;
   }
   if (!password || password.length < AC.PASSWORD_MIN) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.SIGNUP_INVALID_PASSWORD}` });
+    res.status(400).send({ error: AC.SIGNUP_INVALID_PASSWORD });
     return;
   }
 
   /* eslint-disable  @typescript-eslint/no-explicit-any */
   passport.authenticate("local", (err: unknown, user: any) => {
-    // if an error was returned by the strategy, send it to the client
     if (err) {
-      res.send({ error: err });
+      console.error("login strategy error:", err);
+      res.status(500).send({ error: AC.LOGIN_ERROR });
       return;
     }
     // manually setting the logged in user to req.user
     req.user = user;
     if (!req.user) {
-      res.statusCode = 401;
-      res.send({ error: AC.INVALID_EMAIL_PASSWORD });
+      res.status(401).send({ error: AC.INVALID_EMAIL_PASSWORD });
       return;
     }
 
@@ -123,8 +121,7 @@ router.post("/login", (req, res, next) => {
       User.findById(req.user._id).then(
         (user: UserInterface | null) => {
           if (user === null) {
-            res.statusCode = 401;
-            res.send({ error: AC.INVALID_EMAIL_PASSWORD });
+            res.status(401).send({ error: AC.INVALID_EMAIL_PASSWORD });
             return;
           }
           user.refreshToken.push({ refreshToken });
@@ -137,20 +134,20 @@ router.post("/login", (req, res, next) => {
             );
             res.send({ success: true, token, details: user });
           } catch (err) {
-            res.statusCode = 500;
-            res.send({ error: `${AC.GENERAL_ERROR}` });
+            console.error("login user.save error:", err);
+            res.status(500).send({ error: AC.GENERAL_ERROR });
           }
         },
         (err) => {
-          next({ error: err });
+          console.error("login User.findById error:", err);
+          res.status(500).send({ error: AC.LOGIN_ERROR });
         },
       );
     } catch (error) {
-      res.statusCode = 401;
-      res.send({ error: AC.UNAUTHORIZED_USER });
+      res.status(401).send({ error: AC.UNAUTHORIZED_USER });
       return;
     }
-  })(req, res, next);
+  })(req, res);
 });
 
 router.get("/logout", verifyUser, async (req, res) => {
@@ -158,13 +155,11 @@ router.get("/logout", verifyUser, async (req, res) => {
   const refreshToken = signedCookies[getRefreshTokenCookieName(req)];
 
   if (!req.user) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.UNAUTHORIZED_USER}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
     return;
   }
   if (!refreshToken) {
-    res.statusCode = 500;
-    res.send({ error: `${AC.UNAUTHORIZED_JWT}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED_JWT });
     return;
   }
 
@@ -177,8 +172,7 @@ router.get("/logout", verifyUser, async (req, res) => {
     }
   } catch (error: unknown) {
     console.error("logout error:", error);
-    res.statusCode = 401;
-    res.send({ error: AC.LOGOUT_ERROR });
+    res.status(401).send({ error: AC.LOGOUT_ERROR });
     return;
   }
 });
@@ -195,7 +189,8 @@ router.get("/refreshtoken", async (req, res) => {
   try {
     const response = await refreshTheToken(refreshToken);
     if (response?.error) {
-      res.status(401).send(response);
+      const status = response.error === AC.GENERAL_ERROR ? 500 : 401;
+      res.status(status).send(response);
       return;
     }
     if (response) {
@@ -221,26 +216,34 @@ router.post("/change-username", verifyUser, async (req, res) => {
   const { newUsername } = req.body;
 
   if (!req.user) {
-    res.statusCode = 401;
-    res.send({ error: `${AC.UNAUTHORIZED_USER}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
     return;
   }
   if (!refreshToken) {
-    res.statusCode = 500;
-    res.send({ error: `${AC.UNAUTHORIZED}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED });
     return;
   }
 
   try {
     const response = await changeUsername(newUsername, refreshToken);
+    if (response?.error) {
+      const status =
+        response.error === AC.CHANGE_USER_REQUIRED ||
+        response.error === AC.CHANGE_USER_TOO_FEW ||
+        response.error === AC.CHANGE_USER_TOO_MANY ||
+        response.error === AC.CHANGE_USER_UNIQUE
+          ? 400
+          : 401;
+      res.status(status).send(response);
+      return;
+    }
     if (response) {
       res.send(response);
       return;
     }
   } catch (error: unknown) {
     console.error("change-username error:", error);
-    res.statusCode = 401;
-    res.send({ error: AC.CHANGE_USER_ERROR });
+    res.status(401).send({ error: AC.CHANGE_USER_ERROR });
     return;
   }
 });
@@ -251,13 +254,15 @@ router.patch("/change-password", verifyUser, async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
   if (!req.user) {
-    res.statusCode = 400;
-    res.send({ error: `${AC.UNAUTHORIZED}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED });
     return;
   }
   if (!refreshToken) {
-    res.statusCode = 500;
-    res.send({ error: `${AC.UNAUTHORIZED}` });
+    res.status(401).send({ error: AC.UNAUTHORIZED });
+    return;
+  }
+  if (!oldPassword || !newPassword) {
+    res.status(400).send({ error: AC.CHANGE_PASS_REQUIRED });
     return;
   }
 
@@ -267,14 +272,24 @@ router.patch("/change-password", verifyUser, async (req, res) => {
       newPassword,
       refreshToken,
     );
+    if (response?.error) {
+      const status =
+        response.error === AC.CHANGE_PASS_TOO_FEW ||
+        response.error === AC.CHANGE_PASS_TOO_MANY ||
+        response.error === AC.CHANGE_PASS_UNIQUE ||
+        response.error === AC.CHANGE_PASS_LENGTH
+          ? 400
+          : 401;
+      res.status(status).send(response);
+      return;
+    }
     if (response) {
       res.send(response);
       return;
     }
   } catch (error: unknown) {
     console.error("change-password error:", error);
-    res.statusCode = 401;
-    res.send({ error: AC.CHANGE_PASS_ERROR });
+    res.status(401).send({ error: AC.CHANGE_PASS_ERROR });
     return;
   }
 });

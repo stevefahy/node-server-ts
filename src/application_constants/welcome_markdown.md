@@ -1,5 +1,5 @@
-:::custom{style='{"fontSize": "55px", "color": "#4d0000", "height": "45px", "display": "table-cell", "verticalAlign": "bottom"}'}
-![Notes {{w:32,h:32}}](/images/edit_maroon.png "Notes Logo")**Notes**
+:::custom{style='{"fontSize": "55px", "color": "#1B3D29", "height": "45px", "display": "table-cell", "verticalAlign": "bottom"}'}
+![Notes {{w:32,h:32}}](/images/edit_green.png "Notes Logo")**Notes**
 :::
 
 Welcome to the **Notes** App. Notes can be created using text and/or [GitHub Markdown](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax "link to GitHub markdown").
