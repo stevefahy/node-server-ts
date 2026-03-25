@@ -7,9 +7,9 @@
     "start": "tsc && node dist/index.js",
     "lint": "eslint . --ext .ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cross-env NODE_ENV=production rimraf ./dist && tsc && shx mkdir -p dist/application_constants && shx cp src/.env.* dist/ && shx cp src/application_constants/welcome_markdown.md dist/application_constants/ && shx cp src/application_constants/welcome_markdown_angular.md dist/application_constants/",
+    "build": "cross-env NODE_ENV=production rimraf ./dist && tsc && shx mkdir -p dist/assets/markdown && shx cp src/.env.* dist/ && shx cp src/assets/markdown/welcome_markdown.md dist/assets/markdown/",
     "copy": "shx cp src/.env.* dist/",
-    "dev": "cross-env NODE_ENV=development shx mkdir -p dist/application_constants && shx cp src/.env.* dist/ && shx cp src/application_constants/welcome_markdown.md dist/application_constants/ && shx cp src/application_constants/welcome_markdown_angular.md dist/application_constants/ && concurrently \"tsc --watch\" \"cross-env NODE_ENV=development nodemon --ext * dist/index.js\""
+    "dev": "cross-env NODE_ENV=development shx mkdir -p dist/assets/markdown && shx cp src/.env.* dist/ && shx cp src/assets/markdown/welcome_markdown.md dist/assets/markdown/ && concurrently \"tsc --watch\" \"cross-env NODE_ENV=development nodemon --ext * dist/index.js\""
   },
   "keywords": [],
   "author": "",
