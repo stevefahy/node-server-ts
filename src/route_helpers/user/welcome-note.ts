@@ -11,17 +11,9 @@ const AC = APPLICATION_CONSTANTS;
 const getWelcomeNote = async (framework: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     let dirPath;
-    if (framework === "react") {
-      dirPath = path.join(
-        __dirname,
-        "../../application_constants/welcome_markdown.md"
-      );
-    } else {
-      dirPath = path.join(
-        __dirname,
-        "../../application_constants/welcome_markdown_angular.md"
-      );
-    }
+
+    dirPath = path.join(__dirname, "../../assets/markdown/welcome_markdown.md");
+
     let welcome_note: string;
     try {
       welcome_note = readFileSync(dirPath, "utf8");
@@ -53,7 +45,7 @@ export const createWelcomeNote = async (user_ID: string, framework: string) => {
 
   const createNotebook = async (
     user_id: MObjectId,
-    notebook_id: MObjectId
+    notebook_id: MObjectId,
   ): Promise<InsertOneResult<Document>> => {
     return new Promise((resolve, reject) => {
       try {
@@ -83,7 +75,7 @@ export const createWelcomeNote = async (user_ID: string, framework: string) => {
               if (err) {
                 reject(err);
               }
-            }
+            },
           );
       } catch (err: unknown) {
         reject(err);
@@ -94,7 +86,7 @@ export const createWelcomeNote = async (user_ID: string, framework: string) => {
   const createNote = async (
     user_id: MObjectId,
     notebook_id: MObjectId,
-    note: string
+    note: string,
   ): Promise<InsertOneResult<Document>> => {
     return new Promise((resolve, reject) => {
       try {
@@ -119,7 +111,7 @@ export const createWelcomeNote = async (user_ID: string, framework: string) => {
               if (err) {
                 reject(err);
               }
-            }
+            },
           );
       } catch (err: unknown) {
         reject(err);
