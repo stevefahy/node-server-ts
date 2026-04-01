@@ -66,26 +66,6 @@ const APPLICATION_CONSTANTS = {
   DB_CONNECT_ERROR: `Could not connect to the database!`,
   DB_CLIENT_ERROR: `Could not connect to the database client!`,
   DB_COLLECTION_ERROR: `Could not connect to the database collection!`,
-
-  // MARKDOWN
-  // Special Characters to be converted during Markdown processing.
-  SPECIAL_CHARACTERS: [
-    { char: "(c)", display: "©" },
-    { char: "(C)", display: "©" },
-    { char: "(r)", display: "®" },
-    { char: "(R)", display: "®" },
-    { char: "(TM)", display: "™" },
-    { char: "(tm)", display: "™" },
-    { char: "(Tm)", display: "™" },
-    { char: "(+-)", display: "±" },
-    { char: "(P)", display: "℗" },
-    { char: "(p)", display: "℗" },
-    { char: ":crush:", display: "🥰" },
-    { char: ":tear:", display: "🥲" },
-  ],
-  SPLITSCREEN_MINIMUM_WIDTH: 450,
-  VIEWNOTE_PADDING: 69,
-  VIEWNOTE_PADDING_MOBILE: 52,
 };
 
 export default APPLICATION_CONSTANTS;

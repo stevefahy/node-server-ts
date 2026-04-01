@@ -10,7 +10,7 @@ export const signup = async (
   username: string,
   email: string,
   password: string,
-  framework: string
+  _framework: string,
 ): Promise<Signup> => {
   let user: UserInterface;
   let token: string;
@@ -42,7 +42,7 @@ export const signup = async (
   }
 
   try {
-    welcome_note = await createWelcomeNote(user._id, framework);
+    welcome_note = await createWelcomeNote(user._id);
     let notebookID;
     let noteID;
     if (welcome_note && welcome_note.success) {
@@ -59,7 +59,7 @@ export const signup = async (
     } else {
       throw new Error(AC.SIGNUP_WELCOME_NOTE);
     }
-  } catch (err) {
+  } catch {
     throw new Error(AC.SIGNUP_WELCOME_NOTE);
   }
 };

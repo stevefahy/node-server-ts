@@ -1,6 +1,5 @@
 import { ObjectId as MObjectId, UpdateResult } from "mongodb";
-import { dbConnect } from "../../util/db_connect";
-import { errString } from "../../util/errorString";
+import { getNativeDb } from "../../util/db_connect";
 import APPLICATION_CONSTANTS from "../../application_constants/applicationConstants";
 import { NotebookCoverType } from "../../types";
 
@@ -39,12 +38,7 @@ export const editNotebook = async (
     nbUpdated = new Date(notebook_Updated);
   }
 
-  const db_connection = await dbConnect();
-
-  if (db_connection.error !== undefined) {
-    const errMessage = errString(db_connection.error_message);
-    throw new Error(`${AC.DB_CONNECT_ERROR}\n${errMessage}`);
-  }
+  const db = await getNativeDb();
 
   const updateNotebook = (
     userID: MObjectId,
@@ -55,7 +49,7 @@ export const editNotebook = async (
   ): Promise<UpdateResult> => {
     return new Promise((resolve, reject) => {
       try {
-        db_connection.db
+        db
           .collection("notebooks")
           .updateOne(
             {
@@ -114,9 +108,5 @@ export const editNotebook = async (
     }
   } catch (err) {
     throw new Error(`${err}`);
-  } finally {
-    if (db_connection.mongo_connected) {
-      db_connection.client.close();
-    }
   }
 };

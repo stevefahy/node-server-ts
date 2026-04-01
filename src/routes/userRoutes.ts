@@ -9,7 +9,7 @@ import { logout } from "../route_helpers/user/logout";
 import APPLICATION_CONSTANTS from "../application_constants/applicationConstants";
 import {
   getToken,
-  COOKIE_OPTIONS,
+  getRefreshCookieOptions,
   getRefreshToken,
   verifyUser,
 } from "../authenticate";
@@ -67,7 +67,7 @@ router.post("/signup", async (req, res) => {
         res.cookie(
           getRefreshTokenCookieName(req),
           response.refreshToken,
-          COOKIE_OPTIONS,
+          getRefreshCookieOptions(),
         );
         delete response.refreshToken;
       }
@@ -88,7 +88,7 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-router.post("/login", (req, res) => {
+router.post("/login", (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || email.length < AC.EMAIL_MIN) {
@@ -100,54 +100,45 @@ router.post("/login", (req, res) => {
     return;
   }
 
-  /* eslint-disable  @typescript-eslint/no-explicit-any */
-  passport.authenticate("local", (err: unknown, user: any) => {
-    if (err) {
-      console.error("login strategy error:", err);
-      res.status(500).send({ error: AC.LOGIN_ERROR });
-      return;
-    }
-    // manually setting the logged in user to req.user
-    req.user = user;
-    if (!req.user) {
-      res.status(401).send({ error: AC.INVALID_EMAIL_PASSWORD });
-      return;
-    }
+  passport.authenticate(
+    "local",
+    (err: unknown, user: UserInterface | false | undefined) => {
+      void (async () => {
+        if (err) {
+          console.error("login strategy error:", err);
+          res.status(500).send({ error: AC.LOGIN_ERROR });
+          return;
+        }
+        if (user === false || user == null) {
+          res.status(401).send({ error: AC.INVALID_EMAIL_PASSWORD });
+          return;
+        }
+        req.user = user;
 
-    const token = getToken({ _id: req.user._id });
-    const refreshToken = getRefreshToken({ _id: req.user._id });
+        const token = getToken({ _id: req.user._id });
+        const refreshToken = getRefreshToken({ _id: req.user._id });
 
-    try {
-      User.findById(req.user._id).then(
-        (user: UserInterface | null) => {
-          if (user === null) {
+        try {
+          const dbUser = await User.findById(req.user._id);
+          if (dbUser === null) {
             res.status(401).send({ error: AC.INVALID_EMAIL_PASSWORD });
             return;
           }
-          user.refreshToken.push({ refreshToken });
-          try {
-            user.save();
-            res.cookie(
-              getRefreshTokenCookieName(req),
-              refreshToken,
-              COOKIE_OPTIONS,
-            );
-            res.send({ success: true, token, details: user });
-          } catch (err) {
-            console.error("login user.save error:", err);
-            res.status(500).send({ error: AC.GENERAL_ERROR });
-          }
-        },
-        (err) => {
-          console.error("login User.findById error:", err);
-          res.status(500).send({ error: AC.LOGIN_ERROR });
-        },
-      );
-    } catch (error) {
-      res.status(401).send({ error: AC.UNAUTHORIZED_USER });
-      return;
-    }
-  })(req, res);
+          dbUser.refreshToken.push({ refreshToken });
+          await dbUser.save();
+          res.cookie(
+            getRefreshTokenCookieName(req),
+            refreshToken,
+            getRefreshCookieOptions(),
+          );
+          res.send({ success: true, token, details: dbUser });
+        } catch (saveErr: unknown) {
+          console.error("login user save error:", saveErr);
+          res.status(500).send({ error: AC.GENERAL_ERROR });
+        }
+      })().catch(next);
+    },
+  )(req, res, next);
 });
 
 router.get("/logout", verifyUser, async (req, res) => {
@@ -166,7 +157,7 @@ router.get("/logout", verifyUser, async (req, res) => {
   try {
     const response = await logout(refreshToken);
     if (response) {
-      res.clearCookie(getRefreshTokenCookieName(req), COOKIE_OPTIONS);
+      res.clearCookie(getRefreshTokenCookieName(req), getRefreshCookieOptions());
       res.send(response);
       return;
     }
@@ -197,7 +188,7 @@ router.get("/refreshtoken", async (req, res) => {
       res.cookie(
         getRefreshTokenCookieName(req),
         response.newRefreshToken,
-        COOKIE_OPTIONS,
+        getRefreshCookieOptions(),
       );
       delete response.newRefreshToken;
       res.send(response);

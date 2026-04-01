@@ -1,6 +1,5 @@
-import { errString } from "../../util/errorString";
 import APPLICATION_CONSTANTS from "../../application_constants/applicationConstants";
-import { dbConnect } from "../../util/db_connect";
+import { getNativeDb } from "../../util/db_connect";
 import {
   ObjectId as MObjectId,
   UpdateResult,
@@ -28,12 +27,7 @@ export const createNote = async (
   const userID = new MObjectId(user_ID);
   const notebookID = new MObjectId(notebook_ID);
 
-  const db_connection = await dbConnect();
-
-  if (db_connection.error !== undefined) {
-    const errMessage = errString(db_connection.error_message);
-    throw new Error(`${AC.DB_CONNECT_ERROR}\n${errMessage}`);
-  }
+  const db = await getNativeDb();
 
   const updateNotebook = (
     user_id: MObjectId,
@@ -41,7 +35,7 @@ export const createNote = async (
   ): Promise<UpdateResult<Document>> => {
     return new Promise((resolve, reject) => {
       try {
-        db_connection.db
+        db
           .collection("notebooks")
           .updateOne(
             {
@@ -85,7 +79,7 @@ export const createNote = async (
   ): Promise<InsertOneResult<Document>> => {
     return new Promise((resolve, reject) => {
       try {
-        db_connection.db
+        db
           .collection("notes")
           .insertOne({
             notebook: notebookID,
@@ -125,9 +119,5 @@ export const createNote = async (
     return { success: true, note: result };
   } catch (err) {
     throw new Error(`${err}`);
-  } finally {
-    if (db_connection.mongo_connected) {
-      db_connection.client.close();
-    }
   }
 };

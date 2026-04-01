@@ -1,6 +1,11 @@
-import { ObjectId as MObjectId, InsertOneResult, Document } from "mongodb";
+import {
+  ObjectId as MObjectId,
+  InsertOneResult,
+  Document,
+  Db,
+} from "mongodb";
 import { errString } from "../../util/errorString";
-import { dbConnect } from "../../util/db_connect";
+import { getNativeDb } from "../../util/db_connect";
 import APPLICATION_CONSTANTS from "../../application_constants/applicationConstants";
 import mongoose from "mongoose";
 import { readFileSync } from "fs";
@@ -8,38 +13,35 @@ import path from "path";
 
 const AC = APPLICATION_CONSTANTS;
 
-const getWelcomeNote = async (framework: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    let dirPath;
+const WELCOME_MARKDOWN_PATH = path.join(
+  __dirname,
+  "../../assets/markdown/welcome_markdown.md",
+);
 
-    dirPath = path.join(__dirname, "../../assets/markdown/welcome_markdown.md");
+let cachedWelcomeMarkdown: string | null = null;
 
-    let welcome_note: string;
-    try {
-      welcome_note = readFileSync(dirPath, "utf8");
-      resolve(welcome_note);
-    } catch (err: unknown) {
-      reject(err);
-    }
-  });
-};
+function readWelcomeMarkdown(): string {
+  if (cachedWelcomeMarkdown === null) {
+    cachedWelcomeMarkdown = readFileSync(WELCOME_MARKDOWN_PATH, "utf8");
+  }
+  return cachedWelcomeMarkdown;
+}
 
-let WELCOME_NOTE: string;
-
-export const createWelcomeNote = async (user_ID: string, framework: string) => {
+export const createWelcomeNote = async (user_ID: string) => {
   if (!user_ID || user_ID === undefined) {
     throw new Error(`${AC.UNAUTHORIZED_USER}`);
   }
 
-  WELCOME_NOTE = await getWelcomeNote(framework);
+  const welcomeNote = readWelcomeMarkdown();
 
   const userID = new MObjectId(user_ID);
   const notebookID = new mongoose.Types.ObjectId();
 
-  const db_connection = await dbConnect();
-
-  if (db_connection.error !== undefined) {
-    const errMessage = errString(db_connection.error_message);
+  let db: Db;
+  try {
+    db = await getNativeDb();
+  } catch (e: unknown) {
+    const errMessage = errString(e instanceof Error ? e.message : e);
     throw new Error(`${AC.DB_CONNECT_ERROR}\n${errMessage}`);
   }
 
@@ -49,7 +51,7 @@ export const createWelcomeNote = async (user_ID: string, framework: string) => {
   ): Promise<InsertOneResult<Document>> => {
     return new Promise((resolve, reject) => {
       try {
-        db_connection.db
+        db
           .collection("notebooks")
           .insertOne({
             user: user_id,
@@ -64,14 +66,14 @@ export const createWelcomeNote = async (user_ID: string, framework: string) => {
             ],
           })
           .then(
-            (res) => {
+            (res: InsertOneResult<Document>) => {
               if (res === null) {
                 reject(`${AC.NOTEBOOK_CREATE_ERROR}`);
               } else {
                 resolve(res);
               }
             },
-            (err) => {
+            (err: unknown) => {
               if (err) {
                 reject(err);
               }
@@ -90,7 +92,7 @@ export const createWelcomeNote = async (user_ID: string, framework: string) => {
   ): Promise<InsertOneResult<Document>> => {
     return new Promise((resolve, reject) => {
       try {
-        return db_connection.db
+        return db
           .collection("notes")
           .insertOne({
             notebook: notebook_id,
@@ -100,7 +102,7 @@ export const createWelcomeNote = async (user_ID: string, framework: string) => {
             updatedAt: new Date(),
           })
           .then(
-            (res) => {
+            (res: InsertOneResult<Document>) => {
               if (res === null) {
                 reject(`${AC.CREATE_NOTE_ERROR}`);
               } else {
@@ -126,16 +128,12 @@ export const createWelcomeNote = async (user_ID: string, framework: string) => {
   }
 
   try {
-    const result_n = await createNote(userID, notebookID, WELCOME_NOTE);
+    const result_n = await createNote(userID, notebookID, welcomeNote);
     return {
       success: true,
       data: { notebookID: notebookID, noteID: result_n.insertedId },
     };
   } catch (err: unknown) {
     throw new Error(`${err}`);
-  } finally {
-    if (db_connection.mongo_connected) {
-      db_connection.client.close();
-    }
   }
 };

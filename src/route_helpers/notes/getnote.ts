@@ -1,7 +1,6 @@
 import { Note } from "../../types";
-import { errString } from "../../util/errorString";
 import APPLICATION_CONSTANTS from "../../application_constants/applicationConstants";
-import { dbConnect } from "../../util/db_connect";
+import { getNativeDb } from "../../util/db_connect";
 import { Document, ObjectId as MObjectId } from "mongodb";
 
 const AC = APPLICATION_CONSTANTS;
@@ -17,12 +16,7 @@ export const getNote = async (user_ID: string, note_ID: string) => {
   const userID = new MObjectId(user_ID);
   const noteID = new MObjectId(note_ID);
 
-  const db_connection = await dbConnect();
-
-  if (db_connection.error !== undefined) {
-    const errMessage = errString(db_connection.error_message);
-    throw new Error(`${AC.DB_CONNECT_ERROR}\n${errMessage}`);
-  }
+  const db = await getNativeDb();
 
   const findNote = (
     user_id: MObjectId,
@@ -30,7 +24,7 @@ export const getNote = async (user_ID: string, note_ID: string) => {
   ): Promise<Document | null> => {
     return new Promise((resolve, reject) => {
       try {
-        db_connection.db
+        db
           .collection("notes")
           .find({ user: user_id, _id: note_id })
           .project({ user: 0 })
@@ -74,9 +68,5 @@ export const getNote = async (user_ID: string, note_ID: string) => {
     return { success: true, note: result };
   } catch (err) {
     throw new Error(`${err}`);
-  } finally {
-    if (db_connection.mongo_connected) {
-      db_connection.client.close();
-    }
   }
 };

@@ -12,6 +12,6 @@ passport.use(
   )
 );
 
-//called while after logging in / signing up to set user details in req.user
+// Restore user from session when using passport.session()
 passport.serializeUser(User.serializeUser());
-User.serializeUser();
+passport.deserializeUser(User.deserializeUser());

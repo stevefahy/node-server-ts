@@ -1,6 +1,5 @@
 import { Notebook } from "../../types";
-import { errString } from "../../util/errorString";
-import { dbConnect } from "../../util/db_connect";
+import { getNativeDb } from "../../util/db_connect";
 import {
   ObjectId as MObjectId,
   UpdateResult,
@@ -39,17 +38,12 @@ export const moveNotes = async (
     notesObjectArray.push(new MObjectId(notes[i]));
   }
 
-  const db_connection = await dbConnect();
-
-  if (db_connection.error !== undefined) {
-    const errMessage = errString(db_connection.error_message);
-    throw new Error(`${AC.DB_CONNECT_ERROR}\n${errMessage}`);
-  }
+  const db = await getNativeDb();
 
   const getNotebook = (uID: MObjectId, nbId: MObjectId): Promise<Document> => {
     return new Promise((resolve, reject) => {
       try {
-        db_connection.db
+        db
           .collection<Notebook>("notebooks")
           .aggregate([
             {
@@ -99,7 +93,7 @@ export const moveNotes = async (
   ): Promise<UpdateResult> => {
     return new Promise((resolve, reject) => {
       try {
-        db_connection.db
+        db
           .collection("notebooks")
           .updateOne(
             {
@@ -154,7 +148,7 @@ export const moveNotes = async (
     });
     return new Promise((resolve, reject) => {
       try {
-        db_connection.db
+        db
           .collection("notes")
           .bulkWrite(bulk_array)
           .then(
@@ -206,9 +200,5 @@ export const moveNotes = async (
     return { success: true, notes_moved: notes, server_response: result };
   } catch (err: unknown) {
     throw new Error(`${err}`);
-  } finally {
-    if (db_connection.mongo_connected) {
-      db_connection.client.close();
-    }
   }
 };

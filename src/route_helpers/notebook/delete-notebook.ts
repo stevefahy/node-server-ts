@@ -1,7 +1,6 @@
 import { ObjectId as MObjectId, UpdateResult, Document } from "mongodb";
-import { errString } from "../../util/errorString";
 import APPLICATION_CONSTANTS from "../../application_constants/applicationConstants";
-import { dbConnect } from "../../util/db_connect";
+import { getNativeDb } from "../../util/db_connect";
 
 const AC = APPLICATION_CONSTANTS;
 
@@ -16,12 +15,7 @@ export const deleteNotebook = async (user_ID: string, notebook_ID: string) => {
   const userID = new MObjectId(user_ID);
   const notebookID = new MObjectId(notebook_ID);
 
-  const db_connection = await dbConnect();
-
-  if (db_connection.error !== undefined) {
-    const errMessage = errString(db_connection.error_message);
-    throw new Error(`${AC.DB_CONNECT_ERROR}\n${errMessage}`);
-  }
+  const db = await getNativeDb();
 
   const deleteNotebook = (
     userID: MObjectId,
@@ -29,7 +23,7 @@ export const deleteNotebook = async (user_ID: string, notebook_ID: string) => {
   ): Promise<UpdateResult<Document>> => {
     return new Promise((resolve, reject) => {
       try {
-        db_connection.db
+        db
           .collection("notebooks")
           .updateOne(
             {
@@ -77,9 +71,5 @@ export const deleteNotebook = async (user_ID: string, notebook_ID: string) => {
     };
   } catch (err: unknown) {
     throw new Error(`${err}`);
-  } finally {
-    if (db_connection.mongo_connected) {
-      db_connection.client.close();
-    }
   }
 };

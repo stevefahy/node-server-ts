@@ -1,82 +1,74 @@
 import { Db, MongoClient } from "mongodb";
-import { errString } from "./errorString";
 import APPLICATION_CONSTANTS from "../application_constants/applicationConstants";
-import { DBConnect } from "../types";
 
 const AC = APPLICATION_CONSTANTS;
 
 const connectionString = `mongodb://${
   process.env.MONGODB_USERNAME
-}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@${
+}:${encodeURIComponent(process.env.MONGODB_PASSWORD ?? "")}@${
   process.env.MONGODB_URL
 }`;
+
 const connectionDatabase = `${process.env.MONGODB_DB_NAME}`;
 
 const CONNECT_TIMEOUT_MS =
   process.env.NODE_ENV === "production" ? 15_000 : 5_000;
 
-export const connectToDatabase = async (): Promise<DBConnect> => {
-  let client: MongoClient;
-  let db: Db;
-  try {
-    const connectPromise = MongoClient.connect(connectionString, {
-      serverSelectionTimeoutMS: CONNECT_TIMEOUT_MS + 2000, // driver timeout slightly after ours
-    });
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new Error("Connection timed out")),
-        CONNECT_TIMEOUT_MS,
-      ),
-    );
-    connectPromise.catch(() => {}); // absorb driver rejection when it eventually fails
-    client = await Promise.race([connectPromise, timeoutPromise]);
-  } catch (error) {
-    return {
-      error: true,
-      error_message: `${AC.DB_CLIENT_ERROR}\n${error}`,
-    };
-  }
+let client: MongoClient | undefined;
+let connecting: Promise<MongoClient> | undefined;
 
-  try {
-    db = client.db(connectionDatabase);
-    return {
-      client,
-      db,
-      mongo_connected: true,
-    };
-  } catch (error) {
-    return {
-      error: true,
-      error_message: `${AC.DB_COLLECTION_ERROR}\n${error}`,
-    };
-  }
-};
+async function connectClient(): Promise<MongoClient> {
+  const connectPromise = MongoClient.connect(connectionString, {
+    serverSelectionTimeoutMS: CONNECT_TIMEOUT_MS + 2000,
+  });
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(
+      () => reject(new Error("Connection timed out")),
+      CONNECT_TIMEOUT_MS,
+    ),
+  );
+  connectPromise.catch(() => {});
+  return Promise.race([connectPromise, timeoutPromise]);
+}
 
-export const dbConnect = async (): Promise<DBConnect> => {
-  try {
-    const connection = await connectToDatabase();
-    if (connection.error) {
-      return {
-        error: true,
-        error_message: connection.error_message,
-      };
-    }
-    if (connection.error === undefined) {
-      return {
-        client: connection.client,
-        db: connection.db,
-        mongo_connected: connection.mongo_connected,
-      };
-    }
-  } catch (err: unknown) {
-    const errMessage = errString(err);
-    return {
-      error: true,
-      error_message: errMessage,
-    };
+/**
+ * Shared MongoDB database handle for native driver operations (notebooks/notes).
+ * Reuses one client per process; do not call close per request.
+ */
+export async function getNativeDb(): Promise<Db> {
+  if (client) {
+    return client.db(connectionDatabase);
   }
-  return {
-    error: true,
-    error_message: `${AC.DB_CONNECT_ERROR}`,
-  };
-};
+  if (!connecting) {
+    connecting = (async () => {
+      try {
+        const c = await connectClient();
+        client = c;
+        return c;
+      } catch (e) {
+        throw new Error(
+          `${AC.DB_CLIENT_ERROR}\n${e instanceof Error ? e.message : String(e)}`,
+        );
+      } finally {
+        connecting = undefined;
+      }
+    })();
+  }
+  try {
+    const c = await connecting;
+    return c.db(connectionDatabase);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    throw new Error(`${AC.DB_CONNECT_ERROR}\n${message}`);
+  }
+}
+
+/** For graceful shutdown (optional). */
+export async function closeNativeMongoClient(): Promise<void> {
+  if (!client) return;
+  try {
+    await client.close();
+  } finally {
+    client = undefined;
+  }
+}

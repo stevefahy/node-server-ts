@@ -1,6 +1,5 @@
 import { ObjectId as MObjectId, UpdateResult } from "mongodb";
-import { errString } from "../../util/errorString";
-import { dbConnect } from "../../util/db_connect";
+import { getNativeDb } from "../../util/db_connect";
 import APPLICATION_CONSTANTS from "../../application_constants/applicationConstants";
 
 const AC = APPLICATION_CONSTANTS;
@@ -28,12 +27,7 @@ export const saveNote = async (
   const notebookID = new MObjectId(notebook_ID);
   const noteID = new MObjectId(note_ID);
 
-  const db_connection = await dbConnect();
-
-  if (db_connection.error !== undefined) {
-    const errMessage = errString(db_connection.error_message);
-    throw new Error(`${AC.DB_CONNECT_ERROR}\n${errMessage}`);
-  }
+  const db = await getNativeDb();
 
   const updateNotebook = (
     uID: MObjectId,
@@ -41,7 +35,7 @@ export const saveNote = async (
   ): Promise<UpdateResult> => {
     return new Promise((resolve, reject) => {
       try {
-        db_connection.db
+        db
           .collection("notebooks")
           .updateOne(
             {
@@ -86,7 +80,7 @@ export const saveNote = async (
   ): Promise<UpdateResult> => {
     return new Promise((resolve, reject) => {
       try {
-        db_connection.db
+        db
           .collection("notes")
           .updateOne(
             {
@@ -138,9 +132,5 @@ export const saveNote = async (
     };
   } catch (err: unknown) {
     throw new Error(`${err}`);
-  } finally {
-    if (db_connection.mongo_connected) {
-      db_connection.client.close();
-    }
   }
 };

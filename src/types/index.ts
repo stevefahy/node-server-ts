@@ -1,6 +1,6 @@
 import { JwtFromRequestFunction } from "passport-jwt";
 import { Document, Schema } from "mongoose";
-import { Db, MongoClient, ObjectId, UpdateResult } from "mongodb";
+import { ObjectId, UpdateResult } from "mongodb";
 
 // User Signup / Login / Token /
 
@@ -151,26 +151,6 @@ export interface Signup {
   noteID: ObjectId;
   refreshToken?: string;
 }
-
-// DB Connection
-
-interface DBError {
-  error: boolean;
-  error_message: string;
-  client?: never | false;
-  db?: never | false;
-  mongo_connected?: never;
-}
-
-interface DBConnected {
-  error?: never;
-  error_message?: never;
-  client: MongoClient;
-  db: Db;
-  mongo_connected: boolean;
-}
-
-export type DBConnect = DBError | DBConnected;
 
 export interface CreateWelcomeNote {
   success: boolean;

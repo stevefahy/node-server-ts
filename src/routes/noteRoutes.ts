@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
-const router = express.Router();
 import { verifyUser } from "../authenticate";
+import { requireAuth } from "../middleware/requireAuth";
 import { getNote } from "../route_helpers/notes/getnote";
 import { getNotes } from "../route_helpers/notes/getnotes";
 import { createNote } from "../route_helpers/notes/createnote";
@@ -15,47 +15,34 @@ import { deleteNotebook } from "../route_helpers/notebook/delete-notebook";
 import { editNotebook } from "../route_helpers/notebook/edit-notebook";
 import APPLICATION_CONSTANTS from "../application_constants/applicationConstants";
 
+const router = express.Router();
+
 const AC = APPLICATION_CONSTANTS;
 
-// ------------------------------------------------------------------------
-// ROUTES
-// ------------------------------------------------------------------------
+const withUser = [verifyUser, requireAuth];
 
-router.get(
-  "/notebooks",
-  verifyUser,
-  async function (req: Request, res: Response) {
-    if (!req.user) {
-      res.status(401).send({ error: AC.UNAUTHORIZED_USER });
+router.get("/notebooks", ...withUser, async (req: Request, res: Response) => {
+  try {
+    const response = await getNotebooks(req.user!._id);
+    if (response) {
+      res.send(response);
       return;
     }
-
-    try {
-      const response = await getNotebooks(req.user._id);
-      if (response) {
-        res.send(response);
-        return;
-      }
-    } catch (err: unknown) {
-      console.error("getNotebooks error:", err);
-      res.status(400).send({ error: AC.NOTEBOOKS_ERROR });
-      return;
-    }
-  },
-);
-
-router.get("/notebook/:notebookId", verifyUser, async function (req, res) {
-  if (!req.user) {
-    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
+  } catch (err: unknown) {
+    console.error("getNotebooks error:", err);
+    res.status(400).send({ error: AC.NOTEBOOKS_ERROR });
     return;
   }
+});
+
+router.get("/notebook/:notebookId", ...withUser, async (req, res) => {
   if (!req.params.notebookId) {
     res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
   }
 
   try {
-    const response = await getNotebook(req.user._id, req.params.notebookId);
+    const response = await getNotebook(req.user!._id, req.params.notebookId);
     if (response) {
       res.send(response);
       return;
@@ -67,17 +54,13 @@ router.get("/notebook/:notebookId", verifyUser, async function (req, res) {
   }
 });
 
-router.get("/notes/:notebookId", verifyUser, async function (req, res) {
-  if (!req.user) {
-    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
-    return;
-  }
+router.get("/notes/:notebookId", ...withUser, async (req, res) => {
   if (!req.params.notebookId) {
     res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
   }
   try {
-    const response = await getNotes(req.user._id, req.params.notebookId);
+    const response = await getNotes(req.user!._id, req.params.notebookId);
     if (response) {
       res.send(response);
       return;
@@ -89,50 +72,38 @@ router.get("/notes/:notebookId", verifyUser, async function (req, res) {
   }
 });
 
-router.get(
-  "/notebook/:notebookId/:noteId",
-  verifyUser,
-  async function (req, res) {
-    if (!req.user) {
-      res.status(401).send({ error: AC.UNAUTHORIZED_USER });
-      return;
-    }
-    if (!req.params.notebookId) {
-      res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
-      return;
-    }
-    if (!req.params.noteId) {
-      res.status(400).send({ error: AC.NOTE_ID_ERROR });
-      return;
-    }
+router.get("/notebook/:notebookId/:noteId", ...withUser, async (req, res) => {
+  if (!req.params.notebookId) {
+    res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
+    return;
+  }
+  if (!req.params.noteId) {
+    res.status(400).send({ error: AC.NOTE_ID_ERROR });
+    return;
+  }
 
-    if (req.params.noteId === "create-note") {
-      res.status(200).send({ createMode: true });
+  if (req.params.noteId === "create-note") {
+    res.status(200).send({ createMode: true });
+    return;
+  }
+
+  try {
+    const response = await getNote(req.user!._id, req.params.noteId);
+    if (response) {
+      res.send(response);
       return;
     }
+  } catch (err: unknown) {
+    console.error("getNote error:", err);
+    res.status(400).send({ error: AC.NOTE_ERROR });
+    return;
+  }
+});
 
-    try {
-      const response = await getNote(req.user._id, req.params.noteId);
-      if (response) {
-        res.send(response);
-        return;
-      }
-    } catch (err: unknown) {
-      console.error("getNote error:", err);
-      res.status(400).send({ error: AC.NOTE_ERROR });
-      return;
-    }
-  },
-);
-
-router.post("/create-note", verifyUser, async function (req, res) {
+router.post("/create-note", ...withUser, async (req, res) => {
   const data = req.body;
   const { notebookId, note } = data;
 
-  if (!req.user) {
-    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
-    return;
-  }
   if (!notebookId) {
     res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
@@ -143,7 +114,7 @@ router.post("/create-note", verifyUser, async function (req, res) {
   }
 
   try {
-    const response = await createNote(req.user._id, notebookId, note);
+    const response = await createNote(req.user!._id, notebookId, note);
     if (response) {
       res.send(response);
       return;
@@ -155,14 +126,10 @@ router.post("/create-note", verifyUser, async function (req, res) {
   }
 });
 
-router.post("/addnotebook", verifyUser, async function (req, res) {
+router.post("/addnotebook", ...withUser, async (req, res) => {
   const data = req.body;
   const { notebookName, notebookCover } = data;
 
-  if (!req.user) {
-    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
-    return;
-  }
   if (!notebookName) {
     res.status(400).send({ error: AC.NOTEBOOK_NAME_ERROR });
     return;
@@ -174,7 +141,7 @@ router.post("/addnotebook", verifyUser, async function (req, res) {
 
   try {
     const response = await addNotebook(
-      req.user._id,
+      req.user!._id,
       notebookName,
       notebookCover,
     );
@@ -189,21 +156,17 @@ router.post("/addnotebook", verifyUser, async function (req, res) {
   }
 });
 
-router.post("/delete-notes", verifyUser, async function (req, res) {
+router.post("/delete-notes", ...withUser, async (req, res) => {
   const data = req.body;
   const { note_ids } = data;
 
-  if (!req.user) {
-    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
-    return;
-  }
   if (!note_ids || note_ids.length < 1) {
     res.status(400).send({ error: AC.NOTES_DELETE_ID_ERROR });
     return;
   }
 
   try {
-    const response = await deleteNotes(req.user._id, note_ids);
+    const response = await deleteNotes(req.user!._id, note_ids);
     if (response) {
       res.send(response);
       return;
@@ -215,14 +178,10 @@ router.post("/delete-notes", verifyUser, async function (req, res) {
   }
 });
 
-router.post("/edit-notebook-date", verifyUser, async function (req, res) {
+router.post("/edit-notebook-date", ...withUser, async (req, res) => {
   const data = req.body;
   const { notebookID, notebookUpdated } = data;
 
-  if (!req.user) {
-    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
-    return;
-  }
   if (!notebookID) {
     res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
@@ -234,7 +193,7 @@ router.post("/edit-notebook-date", verifyUser, async function (req, res) {
 
   try {
     const response = await editNotebookDate(
-      req.user._id,
+      req.user!._id,
       notebookID,
       notebookUpdated,
     );
@@ -249,14 +208,10 @@ router.post("/edit-notebook-date", verifyUser, async function (req, res) {
   }
 });
 
-router.post("/move-notes", verifyUser, async function (req, res) {
+router.post("/move-notes", ...withUser, async (req, res) => {
   const data = req.body;
   const { notes, notebookID, latestUpdatedNote } = data;
 
-  if (!req.user) {
-    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
-    return;
-  }
   if (!notes) {
     res.status(400).send({ error: AC.NOTES_MOVE_MISSING });
     return;
@@ -272,7 +227,7 @@ router.post("/move-notes", verifyUser, async function (req, res) {
 
   try {
     const response = await moveNotes(
-      req.user._id,
+      req.user!._id,
       notes,
       notebookID,
       latestUpdatedNote,
@@ -288,21 +243,17 @@ router.post("/move-notes", verifyUser, async function (req, res) {
   }
 });
 
-router.post("/delete-notebook", verifyUser, async function (req, res) {
+router.post("/delete-notebook", ...withUser, async (req, res) => {
   const data = req.body;
   const { notebookID } = data;
 
-  if (!req.user) {
-    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
-    return;
-  }
   if (!notebookID) {
     res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
   }
 
   try {
-    const response = await deleteNotebook(req.user._id, notebookID);
+    const response = await deleteNotebook(req.user!._id, notebookID);
     if (response) {
       res.send(response);
       return;
@@ -314,14 +265,10 @@ router.post("/delete-notebook", verifyUser, async function (req, res) {
   }
 });
 
-router.post("/edit-notebook", verifyUser, async function (req, res) {
+router.post("/edit-notebook", ...withUser, async (req, res) => {
   const data = req.body;
   const { notebookID, notebookName, notebookCover, notebookUpdated } = data;
 
-  if (!req.user) {
-    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
-    return;
-  }
   if (!notebookID) {
     res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
@@ -341,7 +288,7 @@ router.post("/edit-notebook", verifyUser, async function (req, res) {
 
   try {
     const response = await editNotebook(
-      req.user._id,
+      req.user!._id,
       notebookID,
       notebookName,
       notebookCover,
@@ -358,14 +305,10 @@ router.post("/edit-notebook", verifyUser, async function (req, res) {
   }
 });
 
-router.post("/save-note", verifyUser, async function (req, res) {
+router.post("/save-note", ...withUser, async (req, res) => {
   const data = req.body;
   const { notebookID, noteID, note } = data;
 
-  if (!req.user) {
-    res.status(401).send({ error: AC.UNAUTHORIZED_USER });
-    return;
-  }
   if (!notebookID) {
     res.status(400).send({ error: AC.NOTEBOOK_ID_ERROR });
     return;
@@ -380,7 +323,7 @@ router.post("/save-note", verifyUser, async function (req, res) {
   }
 
   try {
-    const response = await saveNote(req.user._id, notebookID, noteID, note);
+    const response = await saveNote(req.user!._id, notebookID, noteID, note);
     if (response) {
       res.send(response);
       return;
