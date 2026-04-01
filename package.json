@@ -22,7 +22,7 @@
     "@types/express-session": "^1.17.7",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/ms": "^2.1.0",
-    "@types/node": "^20.2.5",
+    "@types/node": "^20.19.0",
     "@types/passport": "^1.0.12",
     "@types/passport-jwt": "^3.0.8",
     "@types/passport-local": "^1.0.35",
